@@ -5,7 +5,7 @@ import { createSongGuide } from "./songs/songGuide.js";
 
 const OVERLAY_URL = "./data/overlayMap.om108.json";
 const SONGS_URL = "./data/songs.json";
-const STRUM_RETRIGGER_MS = 14;
+const STRUM_RETRIGGER_MS = 10;
 const STRUM_NEIGHBOR_RANGE = 0;
 
 const overlayRoot = document.getElementById("overlayRoot");
@@ -159,16 +159,15 @@ function handleStrumEvent({ phase, y, meta, pointerId }) {
   }
 
   const strings = meta?.strings ?? state.strumStrings;
-  const stringIndex = Math.max(0, Math.min(strings - 1, Math.floor(y * strings)));
-  if (stringIndex === pointerState.lastString) {
-    return;
-  }
+  const nextIndex = Math.max(0, Math.min(strings - 1, Math.floor(y * strings)));
 
-  pointerState.lastString = stringIndex;
-  pointerState.lastTime = now;
-  state.strumPointers.set(pointerId, pointerState);
-  triggerStrumCluster(stringIndex, strings);
-  setControlStatus(`Strum: ${stringIndex + 1}`);
+  if (pointerState.lastString === null || nextIndex !== pointerState.lastString) {
+    pointerState.lastString = nextIndex;
+    pointerState.lastTime = now;
+    state.strumPointers.set(pointerId, pointerState);
+    triggerStrumCluster(nextIndex, strings);
+    setControlStatus(`Strum: ${nextIndex + 1}`);
+  }
 }
 
 function getControlValue(controlId, fallback = 0.5) {
