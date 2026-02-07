@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Online Omnichord (Safari-first)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        margin: 0;
+        font-family: "SF Pro Display", "Segoe UI", sans-serif;
+        background: #0b0d12;
+        color: #f2f4f8;
+      }
+
+      .stage {
+        min-height: 100svh;
+        padding: 18px 22px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      header p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #9ba3b2;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button,
+      .toggle {
+        border: 1px solid #2c3240;
+        background: #1a1f2b;
+        color: #f2f4f8;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel {
+        display: grid;
+        grid-template-columns: minmax(280px, 320px) 1fr;
+        gap: 18px;
+        flex: 1;
+      }
+
+      .chord-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .chord-button {
+        border-radius: 14px;
+        border: 1px solid #2d3546;
+        background: #141821;
+        padding: 12px 10px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 15px;
+        min-height: 54px;
+        position: relative;
+      }
+
+      .chord-button.active {
+        background: #27314b;
+        border-color: #3c67ff;
+        box-shadow: inset 0 0 0 2px rgba(60, 103, 255, 0.4);
+      }
+
+      .chord-button .quality {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        color: #9aa4b7;
+        font-weight: 600;
+      }
+
+      .strumplate {
+        border-radius: 22px;
+        background: linear-gradient(120deg, #121722, #20283a);
+        border: 1px solid #2d3546;
+        position: relative;
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+        min-height: 260px;
+      }
+
+      .segment {
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .segment.active {
+        background: rgba(60, 103, 255, 0.25);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #9aa4b7;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #2e3442;
+        border: 1px solid #3a4255;
+      }
+
+      .dot.active {
+        background: #4fe08b;
+        border-color: #4fe08b;
+      }
+
+      .footer {
+        font-size: 12px;
+        color: #8c96a8;
+      }
+
+      @media (max-width: 900px) {
+        .panel {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <header>
+        <div>
+          <h1>Online Omnichord</h1>
+          <p>Safari-first, touch-ready demo</p>
+        </div>
+        <div class="controls">
+          <button id="enable-audio">Enable Audio</button>
+          <button id="stop-all" disabled>Stop All</button>
+          <label class="toggle">
+            <input id="memory-toggle" type="checkbox" />
+            Memory Hold
+          </label>
+        </div>
+      </header>
+
+      <div class="panel">
+        <section class="chord-grid" id="chord-grid"></section>
+        <section class="strumplate" id="strumplate"></section>
+      </div>
+
+      <div class="status">
+        <div class="dot" id="audio-dot"></div>
+        <span id="audio-status">Audio locked (tap Enable Audio)</span>
+      </div>
+      <div class="footer">Tip: Use two fingers to hold a chord and strum.</div>
+    </div>
+
+    <script>
+      const CHORDS = [
+        { root: "C", quality: "maj" },
+        { root: "C#", quality: "min" },
+        { root: "D", quality: "maj" },
+        { root: "D#", quality: "min" },
+        { root: "E", quality: "maj" },
+        { root: "F", quality: "maj" },
+        { root: "F#", quality: "min" },
+        { root: "G", quality: "maj" },
+        { root: "G#", quality: "min" },
+        { root: "A", quality: "maj" },
+        { root: "A#", quality: "min" },
+        { root: "B", quality: "maj" }
+      ];
+
+      const SEGMENTS = 12;
+      const RETRIGGER_MS = 30;
+
+      const chordGrid = document.getElementById("chord-grid");
+      const strumplate = document.getElementById("strumplate");
+      const enableAudioBtn = document.getElementById("enable-audio");
+      const stopAllBtn = document.getElementById("stop-all");
+      const audioDot = document.getElementById("audio-dot");
+      const audioStatus = document.getElementById("audio-status");
+      const memoryToggle = document.getElementById("memory-toggle");
+
+      let audioContext = null;
+      let masterGain = null;
+      let chordGain = null;
+      let harpGain = null;
+      let activeChord = null;
+      let activeChordKey = null;
+      let chordOscillators = [];
+      let pointerState = new Map();
+      let lastStrumTime = 0;
+      let lastSegment = null;
+
+      function setAudioStatus(unlocked) {
+        audioDot.classList.toggle("active", unlocked);
+        audioStatus.textContent = unlocked
+          ? "Audio ready"
+          : "Audio locked (tap Enable Audio)";
+      }
+
+      function midiToFrequency(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+      }
+
+      function getChordPitches(root, quality) {
+        const rootMap = {
+          C: 60,
+          "C#": 61,
+          D: 62,
+          "D#": 63,
+          E: 64,
+          F: 65,
+          "F#": 66,
+          G: 67,
+          "G#": 68,
+          A: 69,
+          "A#": 70,
+          B: 71
+        };
+        const rootMidi = rootMap[root];
+        const intervals = quality === "min" ? [0, 3, 7] : [0, 4, 7];
+        return intervals.map((interval) => midiToFrequency(rootMidi + interval));
+      }
+
+      function createOsc(frequency, type = "sine") {
+        const osc = audioContext.createOscillator();
+        osc.type = type;
+        osc.frequency.value = frequency;
+        return osc;
+      }
+
+      function ensureAudio() {
+        if (audioContext) {
+          return Promise.resolve();
+        }
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        masterGain.gain.value = 0.85;
+        masterGain.connect(audioContext.destination);
+
+        chordGain = audioContext.createGain();
+        chordGain.gain.value = 0.7;
+        chordGain.connect(masterGain);
+
+        harpGain = audioContext.createGain();
+        harpGain.gain.value = 0.65;
+        harpGain.connect(masterGain);
+        return Promise.resolve();
+      }
+
+      function stopChord() {
+        chordOscillators.forEach((osc) => {
+          try {
+            osc.stop();
+          } catch (error) {
+            // Osc already stopped
+          }
+        });
+        chordOscillators = [];
+        activeChordKey = null;
+        setChordButtonActive(null);
+      }
+
+      function playChord(root, quality) {
+        if (!audioContext) return;
+        stopChord();
+        const frequencies = getChordPitches(root, quality);
+        const now = audioContext.currentTime;
+        chordOscillators = frequencies.map((freq) => {
+          const osc = createOsc(freq, "triangle");
+          const gain = audioContext.createGain();
+          gain.gain.value = 0;
+          osc.connect(gain).connect(chordGain);
+          osc.start();
+          gain.gain.linearRampToValueAtTime(0.45, now + 0.02);
+          return osc;
+        });
+        activeChord = { root, quality };
+      }
+
+      function playHarpNote(segmentIndex) {
+        if (!audioContext || !activeChord) return;
+        const chordPitches = getChordPitches(
+          activeChord.root,
+          activeChord.quality
+        );
+        const basePitch = chordPitches[segmentIndex % chordPitches.length];
+        const octaveOffset = Math.floor(segmentIndex / chordPitches.length);
+        const freq = basePitch * Math.pow(2, octaveOffset);
+        const osc = createOsc(freq, "sine");
+        const gain = audioContext.createGain();
+        const now = audioContext.currentTime;
+        gain.gain.value = 0;
+        osc.connect(gain).connect(harpGain);
+        osc.start();
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.stop(now + 0.32);
+      }
+
+      function stopAll() {
+        stopChord();
+        pointerState.clear();
+        setActiveSegment(null);
+      }
+
+      function setChordButtonActive(key) {
+        document
+          .querySelectorAll(".chord-button")
+          .forEach((button) => button.classList.remove("active"));
+        if (key) {
+          const button = document.querySelector(
+            `[data-chord-key="${key}"]`
+          );
+          if (button) button.classList.add("active");
+        }
+      }
+
+      function setActiveSegment(index) {
+        document
+          .querySelectorAll(".segment")
+          .forEach((segment) => segment.classList.remove("active"));
+        if (index !== null) {
+          const segment = document.querySelector(
+            `[data-segment-index="${index}"]`
+          );
+          if (segment) segment.classList.add("active");
+        }
+      }
+
+      function buildChordGrid() {
+        chordGrid.innerHTML = "";
+        CHORDS.forEach((chord, index) => {
+          const key = `${chord.root}-${chord.quality}`;
+          const button = document.createElement("button");
+          button.className = "chord-button";
+          button.dataset.chordKey = key;
+          button.type = "button";
+          button.innerHTML = `${chord.root}<span class="quality">${chord.quality}</span>`;
+          button.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            if (!audioContext) return;
+            button.setPointerCapture(event.pointerId);
+            activeChordKey = key;
+            setChordButtonActive(key);
+            playChord(chord.root, chord.quality);
+            pointerState.set(event.pointerId, {
+              type: "chord",
+              chordKey: key
+            });
+          });
+          button.addEventListener("pointerup", (event) => {
+            handlePointerRelease(event);
+          });
+          button.addEventListener("pointercancel", (event) => {
+            handlePointerRelease(event);
+          });
+          chordGrid.appendChild(button);
+        });
+      }
+
+      function buildStrumplate() {
+        strumplate.innerHTML = "";
+        for (let i = 0; i < SEGMENTS; i += 1) {
+          const segment = document.createElement("div");
+          segment.className = "segment";
+          segment.dataset.segmentIndex = String(i);
+          const height = 100 / SEGMENTS;
+          segment.style.top = `${i * height}%`;
+          segment.style.height = `${height}%`;
+          strumplate.appendChild(segment);
+        }
+      }
+
+      function getSegmentIndex(clientY) {
+        const rect = strumplate.getBoundingClientRect();
+        const relative = Math.min(Math.max(clientY - rect.top, 0), rect.height);
+        const segment = Math.floor((relative / rect.height) * SEGMENTS);
+        return Math.min(Math.max(segment, 0), SEGMENTS - 1);
+      }
+
+      function handleStrum(event) {
+        if (!audioContext) return;
+        const now = performance.now();
+        if (now - lastStrumTime < RETRIGGER_MS) {
+          return;
+        }
+        const segmentIndex = getSegmentIndex(event.clientY);
+        if (segmentIndex === lastSegment) {
+          return;
+        }
+        lastStrumTime = now;
+        lastSegment = segmentIndex;
+        playHarpNote(segmentIndex);
+        setActiveSegment(segmentIndex);
+      }
+
+      function handlePointerRelease(event) {
+        const state = pointerState.get(event.pointerId);
+        pointerState.delete(event.pointerId);
+        if (state && state.type === "chord") {
+          const shouldHold = memoryToggle.checked;
+          if (!shouldHold) {
+            stopChord();
+          }
+        }
+        if (state && state.type === "strum") {
+          setActiveSegment(null);
+        }
+      }
+
+      strumplate.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        if (!audioContext) return;
+        strumplate.setPointerCapture(event.pointerId);
+        pointerState.set(event.pointerId, { type: "strum" });
+        handleStrum(event);
+      });
+
+      strumplate.addEventListener("pointermove", (event) => {
+        if (!pointerState.has(event.pointerId)) return;
+        handleStrum(event);
+      });
+
+      strumplate.addEventListener("pointerup", handlePointerRelease);
+      strumplate.addEventListener("pointercancel", handlePointerRelease);
+
+      enableAudioBtn.addEventListener("click", async () => {
+        await ensureAudio();
+        await audioContext.resume();
+        setAudioStatus(true);
+        enableAudioBtn.disabled = true;
+        stopAllBtn.disabled = false;
+      });
+
+      stopAllBtn.addEventListener("click", () => {
+        stopAll();
+      });
+
+      buildChordGrid();
+      buildStrumplate();
+      setAudioStatus(false);
+    </script>
+  </body>
+</html>
