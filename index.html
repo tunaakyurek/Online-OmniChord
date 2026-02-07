@@ -4,250 +4,108 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
     />
     <title>Online Omnichord (Safari-first)</title>
-    <style>
-      :root {
-        color-scheme: dark;
-      }
-
-      * {
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      body {
-        margin: 0;
-        font-family: "SF Pro Display", "Segoe UI", sans-serif;
-        background: #0b0d12;
-        color: #f2f4f8;
-      }
-
-      .stage {
-        min-height: 100svh;
-        padding: 18px 22px 28px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      header h1 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 600;
-      }
-
-      header p {
-        margin: 4px 0 0;
-        font-size: 13px;
-        color: #9ba3b2;
-      }
-
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      button,
-      .toggle {
-        border: 1px solid #2c3240;
-        background: #1a1f2b;
-        color: #f2f4f8;
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-      }
-
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .panel {
-        display: grid;
-        grid-template-columns: minmax(280px, 320px) 1fr;
-        gap: 18px;
-        flex: 1;
-      }
-
-      .chord-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        touch-action: none;
-        user-select: none;
-      }
-
-      .chord-button {
-        border-radius: 14px;
-        border: 1px solid #2d3546;
-        background: #141821;
-        padding: 12px 10px;
-        text-align: center;
-        font-weight: 700;
-        font-size: 15px;
-        min-height: 54px;
-        position: relative;
-      }
-
-      .chord-button.active {
-        background: #27314b;
-        border-color: #3c67ff;
-        box-shadow: inset 0 0 0 2px rgba(60, 103, 255, 0.4);
-      }
-
-      .chord-button .quality {
-        display: block;
-        margin-top: 2px;
-        font-size: 11px;
-        color: #9aa4b7;
-        font-weight: 600;
-      }
-
-      .strumplate {
-        border-radius: 22px;
-        background: linear-gradient(120deg, #121722, #20283a);
-        border: 1px solid #2d3546;
-        position: relative;
-        overflow: hidden;
-        touch-action: none;
-        user-select: none;
-        min-height: 260px;
-      }
-
-      .segment {
-        position: absolute;
-        left: 0;
-        right: 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.07);
-      }
-
-      .segment.active {
-        background: rgba(60, 103, 255, 0.25);
-      }
-
-      .status {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: #9aa4b7;
-      }
-
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #2e3442;
-        border: 1px solid #3a4255;
-      }
-
-      .dot.active {
-        background: #4fe08b;
-        border-color: #4fe08b;
-      }
-
-      .footer {
-        font-size: 12px;
-        color: #8c96a8;
-      }
-
-      @media (max-width: 900px) {
-        .panel {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="./src/styles/globals.css" />
   </head>
   <body>
-    <div class="stage">
-      <header>
+    <div class="omni-shell">
+      <header class="hud">
         <div>
           <h1>Online Omnichord</h1>
-          <p>Safari-first, touch-ready demo</p>
+          <p>PNG overlay prototype (Safari-first)</p>
         </div>
-        <div class="controls">
+        <div class="hud-controls">
           <button id="enable-audio">Enable Audio</button>
           <button id="stop-all" disabled>Stop All</button>
           <label class="toggle">
             <input id="memory-toggle" type="checkbox" />
             Memory Hold
           </label>
+          <label class="toggle">
+            <input id="debug-toggle" type="checkbox" checked />
+            Debug Overlay
+          </label>
         </div>
       </header>
 
-      <div class="panel">
-        <section class="chord-grid" id="chord-grid"></section>
-        <section class="strumplate" id="strumplate"></section>
-      </div>
+      <main class="omni-stage" id="omni-stage">
+        <svg id="omni-svg" preserveAspectRatio="xMidYMid meet"></svg>
+      </main>
 
-      <div class="status">
+      <footer class="status">
         <div class="dot" id="audio-dot"></div>
         <span id="audio-status">Audio locked (tap Enable Audio)</span>
-      </div>
-      <div class="footer">Tip: Use two fingers to hold a chord and strum.</div>
+        <span id="control-status">Waiting for overlay...</span>
+      </footer>
     </div>
 
     <script>
-      const CHORDS = [
-        { root: "C", quality: "maj" },
-        { root: "C#", quality: "min" },
-        { root: "D", quality: "maj" },
-        { root: "D#", quality: "min" },
-        { root: "E", quality: "maj" },
-        { root: "F", quality: "maj" },
-        { root: "F#", quality: "min" },
-        { root: "G", quality: "maj" },
-        { root: "G#", quality: "min" },
-        { root: "A", quality: "maj" },
-        { root: "A#", quality: "min" },
-        { root: "B", quality: "maj" }
-      ];
-
-      const SEGMENTS = 12;
-      const RETRIGGER_MS = 30;
-
-      const chordGrid = document.getElementById("chord-grid");
-      const strumplate = document.getElementById("strumplate");
+      const OVERLAY_URL = "./src/domain/layout/overlayMap.default.json";
+      const svg = document.getElementById("omni-svg");
       const enableAudioBtn = document.getElementById("enable-audio");
       const stopAllBtn = document.getElementById("stop-all");
+      const memoryToggle = document.getElementById("memory-toggle");
+      const debugToggle = document.getElementById("debug-toggle");
       const audioDot = document.getElementById("audio-dot");
       const audioStatus = document.getElementById("audio-status");
-      const memoryToggle = document.getElementById("memory-toggle");
+      const controlStatus = document.getElementById("control-status");
+
+      const overlayState = {
+        map: null,
+        controlElements: new Map(),
+        controlBoxes: new Map(),
+        controlsById: new Map(),
+        pointerState: new Map()
+      };
+
+      const STRUM_RETRIGGER_MS = 30;
 
       let audioContext = null;
       let masterGain = null;
       let chordGain = null;
       let harpGain = null;
       let activeChord = null;
-      let activeChordKey = null;
       let chordOscillators = [];
-      let pointerState = new Map();
-      let lastStrumTime = 0;
-      let lastSegment = null;
+
+      document.body.classList.toggle("debug-overlay", debugToggle.checked);
+      debugToggle.addEventListener("change", () => {
+        document.body.classList.toggle("debug-overlay", debugToggle.checked);
+      });
+
+      function setControlStatus(message) {
+        controlStatus.textContent = message;
+      }
 
       function setAudioStatus(unlocked) {
         audioDot.classList.toggle("active", unlocked);
         audioStatus.textContent = unlocked
           ? "Audio ready"
           : "Audio locked (tap Enable Audio)";
+      }
+
+      function ensureAudio() {
+        if (audioContext) return;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        masterGain.gain.value = 0.85;
+        masterGain.connect(audioContext.destination);
+
+        chordGain = audioContext.createGain();
+        chordGain.gain.value = 0.7;
+        chordGain.connect(masterGain);
+
+        harpGain = audioContext.createGain();
+        harpGain.gain.value = 0.65;
+        harpGain.connect(masterGain);
+      }
+
+      function resumeAudioFromGesture() {
+        ensureAudio();
+        if (audioContext.state !== "running") {
+          audioContext.resume().then(() => setAudioStatus(true));
+        }
       }
 
       function midiToFrequency(midi) {
@@ -281,25 +139,6 @@
         return osc;
       }
 
-      function ensureAudio() {
-        if (audioContext) {
-          return Promise.resolve();
-        }
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioContext.createGain();
-        masterGain.gain.value = 0.85;
-        masterGain.connect(audioContext.destination);
-
-        chordGain = audioContext.createGain();
-        chordGain.gain.value = 0.7;
-        chordGain.connect(masterGain);
-
-        harpGain = audioContext.createGain();
-        harpGain.gain.value = 0.65;
-        harpGain.connect(masterGain);
-        return Promise.resolve();
-      }
-
       function stopChord() {
         chordOscillators.forEach((osc) => {
           try {
@@ -309,8 +148,8 @@
           }
         });
         chordOscillators = [];
-        activeChordKey = null;
-        setChordButtonActive(null);
+        activeChord = null;
+        setChordActive(null);
       }
 
       function playChord(root, quality) {
@@ -352,145 +191,217 @@
 
       function stopAll() {
         stopChord();
-        pointerState.clear();
-        setActiveSegment(null);
+        overlayState.pointerState.clear();
+        overlayState.controlElements.forEach((element) => {
+          element.classList.remove("active");
+        });
+        setControlStatus("Stopped.");
       }
 
-      function setChordButtonActive(key) {
-        document
-          .querySelectorAll(".chord-button")
-          .forEach((button) => button.classList.remove("active"));
-        if (key) {
-          const button = document.querySelector(
-            `[data-chord-key="${key}"]`
-          );
-          if (button) button.classList.add("active");
-        }
-      }
-
-      function setActiveSegment(index) {
-        document
-          .querySelectorAll(".segment")
-          .forEach((segment) => segment.classList.remove("active"));
-        if (index !== null) {
-          const segment = document.querySelector(
-            `[data-segment-index="${index}"]`
-          );
-          if (segment) segment.classList.add("active");
-        }
-      }
-
-      function buildChordGrid() {
-        chordGrid.innerHTML = "";
-        CHORDS.forEach((chord, index) => {
-          const key = `${chord.root}-${chord.quality}`;
-          const button = document.createElement("button");
-          button.className = "chord-button";
-          button.dataset.chordKey = key;
-          button.type = "button";
-          button.innerHTML = `${chord.root}<span class="quality">${chord.quality}</span>`;
-          button.addEventListener("pointerdown", (event) => {
-            event.preventDefault();
-            if (!audioContext) return;
-            button.setPointerCapture(event.pointerId);
-            activeChordKey = key;
-            setChordButtonActive(key);
-            playChord(chord.root, chord.quality);
-            pointerState.set(event.pointerId, {
-              type: "chord",
-              chordKey: key
-            });
-          });
-          button.addEventListener("pointerup", (event) => {
-            handlePointerRelease(event);
-          });
-          button.addEventListener("pointercancel", (event) => {
-            handlePointerRelease(event);
-          });
-          chordGrid.appendChild(button);
+      function setChordActive(controlId) {
+        overlayState.controlsById.forEach((control) => {
+          if (control.type === "chord") {
+            setControlPressed(control.id, control.id === controlId);
+          }
         });
       }
 
-      function buildStrumplate() {
-        strumplate.innerHTML = "";
-        for (let i = 0; i < SEGMENTS; i += 1) {
-          const segment = document.createElement("div");
-          segment.className = "segment";
-          segment.dataset.segmentIndex = String(i);
-          const height = 100 / SEGMENTS;
-          segment.style.top = `${i * height}%`;
-          segment.style.height = `${height}%`;
-          strumplate.appendChild(segment);
+      function setControlPressed(controlId, pressed) {
+        const element = overlayState.controlElements.get(controlId);
+        if (!element) return;
+        element.classList.toggle("active", pressed);
+      }
+
+      function resolveValue(value, total, unit) {
+        if (unit === "ratio") {
+          return value * total;
+        }
+        return value;
+      }
+
+      function resolveRect(shape, dims) {
+        return {
+          x: resolveValue(shape.x, dims.w, shape.unit),
+          y: resolveValue(shape.y, dims.h, shape.unit),
+          w: resolveValue(shape.w, dims.w, shape.unit),
+          h: resolveValue(shape.h, dims.h, shape.unit),
+          rx: shape.rx ?? 0
+        };
+      }
+
+      function resolveCircle(shape, dims) {
+        return {
+          cx: resolveValue(shape.cx, dims.w, shape.unit),
+          cy: resolveValue(shape.cy, dims.h, shape.unit),
+          r: resolveValue(shape.r, Math.min(dims.w, dims.h), shape.unit)
+        };
+      }
+
+      function createShape(control, dims) {
+        const svgNS = "http://www.w3.org/2000/svg";
+        if (control.shape.kind === "circle") {
+          const circle = document.createElementNS(svgNS, "circle");
+          const resolved = resolveCircle(control.shape, dims);
+          circle.setAttribute("cx", resolved.cx);
+          circle.setAttribute("cy", resolved.cy);
+          circle.setAttribute("r", resolved.r);
+          return { element: circle, box: resolved };
+        }
+        const rect = document.createElementNS(svgNS, "rect");
+        const resolved = resolveRect(control.shape, dims);
+        rect.setAttribute("x", resolved.x);
+        rect.setAttribute("y", resolved.y);
+        rect.setAttribute("width", resolved.w);
+        rect.setAttribute("height", resolved.h);
+        if (resolved.rx) {
+          rect.setAttribute("rx", resolved.rx);
+        }
+        return { element: rect, box: resolved };
+      }
+
+      function getSvgPoint(event) {
+        const point = svg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        const matrix = svg.getScreenCTM();
+        if (!matrix) return { x: 0, y: 0 };
+        const transformed = point.matrixTransform(matrix.inverse());
+        return { x: transformed.x, y: transformed.y };
+      }
+
+      function handleControlDown(event, control) {
+        event.preventDefault();
+        resumeAudioFromGesture();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        overlayState.pointerState.set(event.pointerId, {
+          controlId: control.id,
+          lastSegment: null,
+          lastTime: 0
+        });
+        if (control.type === "chord") {
+          setChordActive(control.id);
+          playChord(control.root, control.quality);
+          setControlStatus(`Chord: ${control.label ?? control.id}`);
+        } else {
+          setControlPressed(control.id, true);
+          setControlStatus(`Control: ${control.label ?? control.id}`);
+        }
+        if (control.type === "strumplate") {
+          handleStrum(event, control);
         }
       }
 
-      function getSegmentIndex(clientY) {
-        const rect = strumplate.getBoundingClientRect();
-        const relative = Math.min(Math.max(clientY - rect.top, 0), rect.height);
-        const segment = Math.floor((relative / rect.height) * SEGMENTS);
-        return Math.min(Math.max(segment, 0), SEGMENTS - 1);
+      function handleControlMove(event, control) {
+        if (control.type !== "strumplate") return;
+        if (!overlayState.pointerState.has(event.pointerId)) return;
+        handleStrum(event, control);
       }
 
-      function handleStrum(event) {
-        if (!audioContext) return;
-        const now = performance.now();
-        if (now - lastStrumTime < RETRIGGER_MS) {
-          return;
-        }
-        const segmentIndex = getSegmentIndex(event.clientY);
-        if (segmentIndex === lastSegment) {
-          return;
-        }
-        lastStrumTime = now;
-        lastSegment = segmentIndex;
-        playHarpNote(segmentIndex);
-        setActiveSegment(segmentIndex);
-      }
-
-      function handlePointerRelease(event) {
-        const state = pointerState.get(event.pointerId);
-        pointerState.delete(event.pointerId);
-        if (state && state.type === "chord") {
-          const shouldHold = memoryToggle.checked;
-          if (!shouldHold) {
+      function handleControlUp(event, control) {
+        const state = overlayState.pointerState.get(event.pointerId);
+        overlayState.pointerState.delete(event.pointerId);
+        if (state && control.type === "chord") {
+          if (!memoryToggle.checked) {
             stopChord();
           }
         }
-        if (state && state.type === "strum") {
-          setActiveSegment(null);
+        if (control.type === "strumplate") {
+          setControlPressed(control.id, false);
         }
       }
 
-      strumplate.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        if (!audioContext) return;
-        strumplate.setPointerCapture(event.pointerId);
-        pointerState.set(event.pointerId, { type: "strum" });
-        handleStrum(event);
-      });
+      function handleStrum(event, control) {
+        const box = overlayState.controlBoxes.get(control.id);
+        if (!box) return;
+        const state = overlayState.pointerState.get(event.pointerId);
+        if (!state) return;
+        const now = performance.now();
+        if (now - state.lastTime < STRUM_RETRIGGER_MS) {
+          return;
+        }
+        const point = getSvgPoint(event);
+        const relative = Math.min(Math.max(point.y - box.y, 0), box.h);
+        const segments = control.segments ?? 12;
+        const segmentIndex = Math.floor((relative / box.h) * segments);
+        if (segmentIndex === state.lastSegment) {
+          return;
+        }
+        state.lastTime = now;
+        state.lastSegment = segmentIndex;
+        playHarpNote(segmentIndex);
+        setControlStatus(`Strum segment: ${segmentIndex + 1}`);
+      }
 
-      strumplate.addEventListener("pointermove", (event) => {
-        if (!pointerState.has(event.pointerId)) return;
-        handleStrum(event);
-      });
+      async function loadOverlayMap() {
+        const response = await fetch(OVERLAY_URL);
+        if (!response.ok) {
+          throw new Error("Overlay map could not be loaded.");
+        }
+        return response.json();
+      }
 
-      strumplate.addEventListener("pointerup", handlePointerRelease);
-      strumplate.addEventListener("pointercancel", handlePointerRelease);
+      async function init() {
+        try {
+          const map = await loadOverlayMap();
+          overlayState.map = map;
+          const image = new Image();
+          image.src = map.image.src;
+          image.onload = () => {
+            map.image.w = image.naturalWidth;
+            map.image.h = image.naturalHeight;
+            renderOverlay(map);
+            setControlStatus("Overlay ready.");
+          };
+        } catch (error) {
+          setControlStatus("Overlay failed to load.");
+        }
+      }
 
-      enableAudioBtn.addEventListener("click", async () => {
-        await ensureAudio();
-        await audioContext.resume();
-        setAudioStatus(true);
+      function renderOverlay(map) {
+        const svgNS = "http://www.w3.org/2000/svg";
+        while (svg.firstChild) {
+          svg.removeChild(svg.firstChild);
+        }
+        svg.setAttribute("viewBox", `0 0 ${map.image.w} ${map.image.h}`);
+        const image = document.createElementNS(svgNS, "image");
+        image.setAttribute("href", map.image.src);
+        image.setAttribute("width", map.image.w);
+        image.setAttribute("height", map.image.h);
+        image.setAttribute("pointer-events", "none");
+        svg.appendChild(image);
+
+        map.controls.forEach((control) => {
+          const { element, box } = createShape(control, map.image);
+          element.classList.add("overlay-shape");
+          element.dataset.controlId = control.id;
+          element.addEventListener("pointerdown", (event) =>
+            handleControlDown(event, control)
+          );
+          element.addEventListener("pointerup", (event) =>
+            handleControlUp(event, control)
+          );
+          element.addEventListener("pointercancel", (event) =>
+            handleControlUp(event, control)
+          );
+          element.addEventListener("pointermove", (event) =>
+            handleControlMove(event, control)
+          );
+          svg.appendChild(element);
+          overlayState.controlElements.set(control.id, element);
+          overlayState.controlBoxes.set(control.id, box);
+          overlayState.controlsById.set(control.id, control);
+        });
+      }
+
+      enableAudioBtn.addEventListener("click", () => {
+        resumeAudioFromGesture();
         enableAudioBtn.disabled = true;
         stopAllBtn.disabled = false;
       });
 
-      stopAllBtn.addEventListener("click", () => {
-        stopAll();
-      });
+      stopAllBtn.addEventListener("click", stopAll);
 
-      buildChordGrid();
-      buildStrumplate();
+      init();
       setAudioStatus(false);
     </script>
   </body>
