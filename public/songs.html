@@ -19,6 +19,57 @@
       <main>
         <div id="songs-list" class="songs-list"></div>
         <p id="songs-status">Loading songs...</p>
+        <section id="songs-admin" class="songs-admin" hidden>
+          <h2>Add a Song (Admin)</h2>
+          <p class="songs-admin__note">
+            Admin mode is enabled from the main page. Songs are saved locally in
+            this browser. Use Export to update <code>data/songs.json</code> and
+            redeploy.
+          </p>
+          <div class="songs-form__actions">
+            <button type="button" id="song-export">Export JSON</button>
+            <label class="songs-import">
+              Import JSON
+              <input id="song-import" type="file" accept="application/json" />
+            </label>
+            <button type="button" id="song-logout">Admin Logout</button>
+          </div>
+          <form id="song-form" class="songs-form">
+            <label>
+              Song title
+              <input id="song-title-input" type="text" placeholder="My Song" required />
+            </label>
+            <div class="songs-form__row">
+              <label>
+                Meter
+                <input id="song-meter" type="text" placeholder="4/4" required />
+              </label>
+              <label>
+                BPM
+                <input id="song-bpm" type="number" min="40" max="240" step="1" value="96" required />
+              </label>
+              <label class="songs-form__toggle">
+                <input id="song-loop" type="checkbox" checked />
+                Loop
+              </label>
+            </div>
+            <label>
+              Chords (one per line: <code>Chord, beats</code>)
+              <textarea
+                id="song-steps"
+                rows="6"
+                placeholder="Db:maj, 4\nBb:min, 2\nAb:maj, 4"
+                required
+              ></textarea>
+            </label>
+            <div class="songs-form__actions">
+              <button type="submit">Save Song</button>
+              <button type="button" id="song-clear">Clear Form</button>
+              <button type="button" id="song-clear-all">Remove All Custom</button>
+            </div>
+            <p id="song-form-status" class="songs-admin__note"></p>
+          </form>
+        </section>
       </main>
     </div>
     <script type="module" src="./src/songs/songsPage.js"></script>

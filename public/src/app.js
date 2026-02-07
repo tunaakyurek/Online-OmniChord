@@ -15,6 +15,7 @@ const memoryToggle = document.getElementById("memory-toggle");
 const debugToggle = document.getElementById("debug-toggle");
 const rhythmToggleBtn = document.getElementById("rhythm-toggle");
 const guideClearBtn = document.getElementById("guide-clear");
+const adminToggleBtn = document.getElementById("admin-toggle");
 const audioDot = document.getElementById("audio-dot");
 const audioStatus = document.getElementById("audio-status");
 const controlStatus = document.getElementById("control-status");
@@ -25,6 +26,10 @@ const songProgressBar = document.getElementById("song-progress-bar");
 
 const engine = new AudioEngine();
 let rhythmEnabled = false;
+const ADMIN_KEY = "omnichord.admin";
+const CUSTOM_SONGS_KEY = "omnichord.customSongs";
+const ADMIN_USER = "Tuhakem10";
+const ADMIN_PASS = "Tuna2004";
 
 const state = {
   overlayMap: null,
@@ -317,7 +322,19 @@ async function loadSongs() {
   if (!response.ok) {
     throw new Error("Songs data could not be loaded.");
   }
-  return response.json();
+  const baseSongs = await response.json();
+  const customSongs = loadCustomSongs();
+  return { ...baseSongs, ...customSongs };
+}
+
+function loadCustomSongs() {
+  const raw = localStorage.getItem(CUSTOM_SONGS_KEY);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    return {};
+  }
 }
 
 function parseChordKey(chordKey) {
@@ -456,6 +473,21 @@ stopAllBtn.addEventListener("click", stopAll);
 
 if (guideClearBtn) {
   guideClearBtn.addEventListener("click", clearGuide);
+}
+
+if (adminToggleBtn) {
+  adminToggleBtn.addEventListener("click", () => {
+    const username = window.prompt("Admin username:");
+    if (!username) return;
+    const password = window.prompt("Admin password:");
+    if (!password) return;
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+      localStorage.setItem(ADMIN_KEY, "1");
+      window.location.href = "./songs.html";
+    } else {
+      window.alert("Invalid admin credentials.");
+    }
+  });
 }
 
 if (rhythmToggleBtn) {

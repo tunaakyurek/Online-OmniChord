@@ -83,6 +83,17 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.admin-toggle {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 999px;
+  opacity: 0.65;
+  z-index: 20;
+}
+
 .toggle {
   display: inline-flex;
   align-items: center;
@@ -251,12 +262,20 @@ button:disabled {
 .song-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding: 14px;
   background: var(--panel);
   border: 1px solid #242a38;
   border-radius: 12px;
   color: var(--text);
+  text-decoration: none;
+}
+
+.song-card__link {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: inherit;
   text-decoration: none;
 }
 
@@ -268,4 +287,103 @@ button:disabled {
 .song-card__meta {
   font-size: 12px;
   color: var(--muted);
+}
+
+.song-card__remove {
+  align-self: flex-start;
+  border: 1px solid #2c3240;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.songs-admin {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid #242a38;
+  border-radius: 12px;
+}
+
+.songs-admin h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.songs-admin__note {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 6px 0 12px;
+}
+
+.songs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.songs-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.songs-form input,
+.songs-form textarea {
+  background: #0e1118;
+  border: 1px solid #2c3240;
+  border-radius: 10px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.songs-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.songs-form__toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.songs-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.songs-import {
+  border: 1px dashed #2c3240;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.songs-import input {
+  display: none;
+}
+
+.songs-form__actions button {
+  border: 1px solid #2c3240;
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
 }
