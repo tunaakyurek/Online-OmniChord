@@ -3,7 +3,10 @@ export function renderOverlay({
   overlayMap,
   onChordDown,
   onChordUp,
-  onStrumEvent
+  onStrumEvent,
+  onControlDown,
+  onControlMove,
+  onControlUp
 }) {
   overlayRoot.innerHTML = "";
   const elementsById = new Map();
@@ -38,10 +41,42 @@ export function renderOverlay({
         ev.preventDefault();
         onChordUp(el, ev);
       });
-    }
-
-    if (el.type === "strumplate") {
+      node.addEventListener("lostpointercapture", (ev) => {
+        onChordUp(el, ev);
+      });
+    } else if (el.type === "strumplate") {
       attachStrumHandlers(node, el, onStrumEvent);
+    } else {
+      node.addEventListener("pointerdown", (ev) => {
+        ev.preventDefault();
+        node.setPointerCapture(ev.pointerId);
+        if (onControlDown) {
+          onControlDown(el, ev);
+        }
+      });
+      node.addEventListener("pointermove", (ev) => {
+        ev.preventDefault();
+        if (onControlMove) {
+          onControlMove(el, ev);
+        }
+      });
+      node.addEventListener("pointerup", (ev) => {
+        ev.preventDefault();
+        if (onControlUp) {
+          onControlUp(el, ev);
+        }
+      });
+      node.addEventListener("pointercancel", (ev) => {
+        ev.preventDefault();
+        if (onControlUp) {
+          onControlUp(el, ev);
+        }
+      });
+      node.addEventListener("lostpointercapture", (ev) => {
+        if (onControlUp) {
+          onControlUp(el, ev);
+        }
+      });
     }
 
     overlayRoot.appendChild(node);
@@ -58,7 +93,14 @@ function attachStrumHandlers(node, strumEl, onStrumEvent) {
     const rect = node.getBoundingClientRect();
     const x = (ev.clientX - rect.left) / rect.width;
     const y = (ev.clientY - rect.top) / rect.height;
-    onStrumEvent({ phase, x, y, pointerType: ev.pointerType, meta: strumEl });
+    onStrumEvent({
+      phase,
+      x,
+      y,
+      pointerType: ev.pointerType,
+      pointerId: ev.pointerId,
+      meta: strumEl
+    });
   };
 
   node.addEventListener("pointerdown", (ev) => {
@@ -84,6 +126,12 @@ function attachStrumHandlers(node, strumEl, onStrumEvent) {
   node.addEventListener("pointercancel", (ev) => {
     if (!isDown) return;
     ev.preventDefault();
+    isDown = false;
+    emit(ev, "cancel");
+  });
+
+  node.addEventListener("lostpointercapture", (ev) => {
+    if (!isDown) return;
     isDown = false;
     emit(ev, "cancel");
   });

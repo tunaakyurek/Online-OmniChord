@@ -6,12 +6,14 @@ import { createSongGuide } from "./songs/songGuide.js";
 const OVERLAY_URL = "./data/overlayMap.om108.json";
 const SONGS_URL = "./data/songs.json";
 const STRUM_RETRIGGER_MS = 14;
+const STRUM_NEIGHBOR_RANGE = 0;
 
 const overlayRoot = document.getElementById("overlayRoot");
 const enableAudioBtn = document.getElementById("enable-audio");
 const stopAllBtn = document.getElementById("stop-all");
 const memoryToggle = document.getElementById("memory-toggle");
 const debugToggle = document.getElementById("debug-toggle");
+const rhythmToggleBtn = document.getElementById("rhythm-toggle");
 const audioDot = document.getElementById("audio-dot");
 const audioStatus = document.getElementById("audio-status");
 const controlStatus = document.getElementById("control-status");
@@ -21,16 +23,44 @@ const songStepEl = document.getElementById("song-step");
 const songProgressBar = document.getElementById("song-progress-bar");
 
 const engine = new AudioEngine();
+let rhythmEnabled = false;
 
 const state = {
   overlayMap: null,
   elementsById: new Map(),
+  controlsById: new Map(),
   activeChordId: null,
-  lastStrumString: null,
-  lastStrumTime: 0,
+  activeChordPointerId: null,
+  strumPointers: new Map(),
   strumStrings: 27,
-  guide: null
+  guide: null,
+  controlValues: new Map(),
+  pointerControls: new Map(),
+  knobIndicators: new Map()
 };
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function gainCurve01(value) {
+  const v = clamp(value, 0, 1);
+  return v * v;
+}
+
+function tempoCurve01(value) {
+  const min = 0.5;
+  const max = 4.0;
+  const t = clamp(value, 0, 1);
+  return min * Math.pow(max / min, t);
+}
+
+function sustainSeconds01(value) {
+  const min = 0.04;
+  const max = 1.2;
+  const t = clamp(value, 0, 1);
+  return min * Math.pow(max / min, t);
+}
 
 function setAudioStatus(unlocked) {
   audioDot.classList.toggle("active", unlocked);
@@ -45,6 +75,11 @@ function setControlStatus(message) {
 
 function applyDebug() {
   document.body.classList.toggle("debug-overlay", debugToggle.checked);
+}
+
+function updateRhythmButton() {
+  if (!rhythmToggleBtn) return;
+  rhythmToggleBtn.textContent = rhythmEnabled ? "Rhythm On" : "Rhythm Off";
 }
 
 function setChordActive(controlId) {
@@ -68,8 +103,9 @@ function chordKeyFromControl(control) {
   return `${control.root}:${control.quality}`;
 }
 
-function handleChordDown(control) {
+function handleChordDown(control, ev) {
   state.activeChordId = control.id;
+  state.activeChordPointerId = ev.pointerId;
   setChordActive(control.id);
   engine.playChord(control.root, control.quality);
   setControlStatus(`Chord: ${control.root}${control.quality === "min" ? "m" : ""}`);
@@ -80,38 +116,186 @@ function handleChordDown(control) {
   }
 }
 
-function handleChordUp(control) {
+function handleChordUp(control, ev) {
+  if (state.activeChordPointerId !== ev.pointerId) return;
   stopChordIfNeeded(control.id);
+  state.activeChordPointerId = null;
 }
 
-function handleStrumEvent({ phase, y, meta }) {
+function triggerStrumCluster(centerIndex, strings) {
+  for (let offset = -STRUM_NEIGHBOR_RANGE; offset <= STRUM_NEIGHBOR_RANGE; offset += 1) {
+    const idx = centerIndex + offset;
+    if (idx < 0 || idx >= strings) continue;
+    engine.playHarpFromChord(idx, strings);
+  }
+}
+
+function handleStrumEvent({ phase, y, meta, pointerId }) {
+  if (phase === "down" && meta?.id) {
+    setPressed(state.elementsById, meta.id, true);
+  }
   if (phase === "up" || phase === "cancel") {
-    state.lastStrumString = null;
+    state.strumPointers.delete(pointerId);
+    if (meta?.id) {
+      setPressed(state.elementsById, meta.id, false);
+    }
     return;
   }
 
   const now = performance.now();
-  if (now - state.lastStrumTime < STRUM_RETRIGGER_MS) {
+  const pointerState = state.strumPointers.get(pointerId) ?? {
+    lastString: null,
+    lastTime: 0
+  };
+
+  if (now - pointerState.lastTime < STRUM_RETRIGGER_MS) {
     return;
   }
 
   const strings = meta?.strings ?? state.strumStrings;
   const stringIndex = Math.max(0, Math.min(strings - 1, Math.floor(y * strings)));
-  if (stringIndex === state.lastStrumString) {
+  if (stringIndex === pointerState.lastString) {
     return;
   }
 
-  state.lastStrumString = stringIndex;
-  state.lastStrumTime = now;
-  engine.playHarpFromChord(stringIndex);
+  pointerState.lastString = stringIndex;
+  pointerState.lastTime = now;
+  state.strumPointers.set(pointerId, pointerState);
+  triggerStrumCluster(stringIndex, strings);
   setControlStatus(`Strum: ${stringIndex + 1}`);
+}
+
+function getControlValue(controlId, fallback = 0.5) {
+  if (!state.controlValues.has(controlId)) {
+    state.controlValues.set(controlId, fallback);
+  }
+  return state.controlValues.get(controlId);
+}
+
+function setControlValue(controlId, value, min = 0, max = 1) {
+  const clamped = clamp(value, min, max);
+  state.controlValues.set(controlId, clamped);
+  updateKnobIndicator(controlId);
+  return clamped;
+}
+
+function formatKnobRatio(value, min, max) {
+  const range = max - min || 1;
+  const normalized = (value - min) / range;
+  const steps = Math.round(clamp(normalized, 0, 1) * 10);
+  return `${steps}/10`;
+}
+
+function updateKnobIndicator(controlId) {
+  const indicator = state.knobIndicators.get(controlId);
+  const control = state.controlsById.get(controlId);
+  if (!indicator || !control) return;
+  const value = getControlValue(controlId, control.default ?? 0.5);
+  const min = control.min ?? 0;
+  const max = control.max ?? 1;
+  indicator.textContent = formatKnobRatio(value, min, max);
+}
+
+function createKnobIndicators(controls) {
+  for (const indicator of state.knobIndicators.values()) {
+    indicator.remove();
+  }
+  state.knobIndicators.clear();
+
+  for (const control of controls) {
+    if (control.type !== "knob") continue;
+    const indicator = document.createElement("div");
+    indicator.className = "knob-indicator";
+    const [x, y, w, h] = control.bbox;
+    indicator.style.left = `${(x + w / 2) * 100}%`;
+    indicator.style.top = `${y * 100}%`;
+    overlayRoot.appendChild(indicator);
+    state.knobIndicators.set(control.id, indicator);
+    updateKnobIndicator(control.id);
+  }
+}
+
+function applyControlValue(controlId, value) {
+  if (controlId === "knob_master_volume") {
+    engine.setMasterVolume(gainCurve01(value));
+  }
+  if (controlId === "knob_chord_volume") {
+    engine.setChordVolume(gainCurve01(value));
+  }
+  if (controlId === "knob_strum_main") {
+    engine.setHarpVolume(gainCurve01(value));
+  }
+  if (controlId === "knob_strum_sub") {
+    engine.setHarpSubVolume(gainCurve01(value));
+  }
+  if (controlId === "knob_strum_sustain") {
+    engine.setHarpReleaseSeconds(sustainSeconds01(value));
+  }
+  if (controlId === "knob_rhythm_volume") {
+    engine.setRhythmVolume(gainCurve01(value));
+  }
+  if (controlId === "knob_rhythm_tempo") {
+    engine.setTempoMultiplier(tempoCurve01(value));
+  }
+}
+
+function handleControlDown(control, ev) {
+  const type = control.type;
+  if (type === "toggle") {
+    const current = getControlValue(control.id, 0);
+    const next = current > 0 ? 0 : 1;
+    setControlValue(control.id, next);
+    setPressed(state.elementsById, control.id, next > 0);
+    setControlStatus(`Toggle: ${control.label ?? control.id} ${next ? "on" : "off"}`);
+  } else if (type === "button") {
+    setPressed(state.elementsById, control.id, true);
+    setControlStatus(`Button: ${control.label ?? control.id}`);
+  } else if (type === "knob") {
+    const current = getControlValue(control.id, control.default ?? 0.5);
+    state.pointerControls.set(ev.pointerId, {
+      id: control.id,
+      startY: ev.clientY,
+      startValue: current,
+      min: control.min ?? 0,
+      max: control.max ?? 1
+    });
+    setPressed(state.elementsById, control.id, true);
+    setControlStatus(`Knob: ${control.label ?? control.id}`);
+  }
+}
+
+function handleControlMove(control, ev) {
+  if (control.type !== "knob") return;
+  const pointer = state.pointerControls.get(ev.pointerId);
+  if (!pointer || pointer.id !== control.id) return;
+  const delta = (pointer.startY - ev.clientY) / 220;
+  const next = setControlValue(
+    control.id,
+    pointer.startValue + delta,
+    pointer.min,
+    pointer.max
+  );
+  applyControlValue(control.id, next);
+  setControlStatus(`Knob: ${control.label ?? control.id} ${(next * 100).toFixed(0)}%`);
+}
+
+function handleControlUp(control, ev) {
+  if (control.type === "button") {
+    setPressed(state.elementsById, control.id, false);
+  }
+  if (control.type === "knob") {
+    state.pointerControls.delete(ev.pointerId);
+    setPressed(state.elementsById, control.id, false);
+  }
 }
 
 function stopAll() {
   engine.stopAll();
   clearPressed(state.elementsById);
   state.activeChordId = null;
-  state.lastStrumString = null;
+  state.activeChordPointerId = null;
+  state.strumPointers.clear();
+  state.pointerControls.clear();
   setControlStatus("Stopped.");
 }
 
@@ -191,14 +375,29 @@ async function init() {
       overlayMap: state.overlayMap,
       onChordDown: handleChordDown,
       onChordUp: handleChordUp,
-      onStrumEvent: handleStrumEvent
+      onStrumEvent: handleStrumEvent,
+      onControlDown: handleControlDown,
+      onControlMove: handleControlMove,
+      onControlUp: handleControlUp
     });
     state.elementsById = elementsById;
+    state.controlsById = new Map(
+      state.overlayMap.elements.map((control) => [control.id, control])
+    );
 
     const strum = state.overlayMap.elements.find((el) => el.type === "strumplate");
     if (strum?.strings) {
       state.strumStrings = strum.strings;
     }
+
+    for (const control of state.overlayMap.elements) {
+      if (control.type !== "knob") continue;
+      const value = control.default ?? 0.5;
+      setControlValue(control.id, value, control.min ?? 0, control.max ?? 1);
+      applyControlValue(control.id, value);
+    }
+
+    createKnobIndicators(state.overlayMap.elements);
 
     setControlStatus("Overlay ready.");
     updateGuideDisplay();
@@ -215,9 +414,19 @@ enableAudioBtn.addEventListener("click", async () => {
   setAudioStatus(engine.isReady());
   enableAudioBtn.disabled = true;
   stopAllBtn.disabled = false;
+  engine.setRhythmEnabled(rhythmEnabled);
 });
 
 stopAllBtn.addEventListener("click", stopAll);
+
+if (rhythmToggleBtn) {
+  updateRhythmButton();
+  rhythmToggleBtn.addEventListener("click", () => {
+    rhythmEnabled = !rhythmEnabled;
+    engine.setRhythmEnabled(rhythmEnabled);
+    updateRhythmButton();
+  });
+}
 
 initGuide();
 init();

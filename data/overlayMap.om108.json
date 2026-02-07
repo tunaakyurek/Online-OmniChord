@@ -1,7 +1,7 @@
 {
   "reference": {
-    "width": 2048,
-    "height": 1111,
+    "width": 1308,
+    "height": 710,
     "image": "assets/omnichord.png"
   },
   "elements": [
@@ -294,10 +294,80 @@
       "gesture": "hold"
     },
     {
+      "id": "knob_master_volume",
+      "type": "knob",
+      "label": "Master Volume",
+      "bbox": [0.058073, 0.254028, 0.040734, 0.075042],
+      "min": 0,
+      "max": 1,
+      "default": 0.85,
+      "step": 0.001
+    },
+    {
+      "id": "knob_strum_sustain",
+      "type": "knob",
+      "label": "Strum Sustain",
+      "bbox": [0.339266, 0.131493, 0.032477, 0.059831],
+      "min": 0,
+      "max": 1,
+      "default": 0.35,
+      "step": 0.001
+    },
+    {
+      "id": "knob_strum_main",
+      "type": "knob",
+      "label": "Strum Main Vol",
+      "bbox": [0.387798, 0.126254, 0.034495, 0.063549],
+      "min": 0,
+      "max": 1,
+      "default": 0.75,
+      "step": 0.001
+    },
+    {
+      "id": "knob_strum_sub",
+      "type": "knob",
+      "label": "Strum Sub Vol",
+      "bbox": [0.434037, 0.125239, 0.037431, 0.068958],
+      "min": 0,
+      "max": 1,
+      "default": 0.2,
+      "step": 0.001
+    },
+    {
+      "id": "knob_rhythm_tempo",
+      "type": "knob",
+      "label": "Rhythm Tempo",
+      "bbox": [0.329083, 0.261465, 0.028991, 0.053408],
+      "min": 0,
+      "max": 1,
+      "default": 0.5,
+      "step": 0.001
+    },
+    {
+      "id": "knob_rhythm_volume",
+      "type": "knob",
+      "label": "Rhythm Volume",
+      "bbox": [0.374128, 0.258254, 0.034312, 0.063211],
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "step": 0.001
+    },
+    {
+      "id": "knob_chord_volume",
+      "type": "knob",
+      "label": "Chord Volume",
+      "bbox": [0.436422, 0.259775, 0.034495, 0.063549],
+      "min": 0,
+      "max": 1,
+      "default": 0.85,
+      "step": 0.001
+    },
+    {
       "id": "strumplate_main",
       "type": "strumplate",
       "bbox": [0.505371, 0.106211, 0.100098, 0.585059],
-      "strings": 27
+      "strings": 48
     }
   ]
 }

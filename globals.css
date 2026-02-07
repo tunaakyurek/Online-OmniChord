@@ -135,7 +135,7 @@ button:disabled {
   position: relative;
   width: min(100vw, 1400px);
   margin: 0 auto;
-  aspect-ratio: 2048 / 1111;
+  aspect-ratio: 1308 / 710;
 }
 
 .stage__img {
@@ -174,6 +174,10 @@ button:disabled {
   border-radius: 12px;
 }
 
+.debug-overlay .hit--knob {
+  border-radius: 50%;
+}
+
 .hit.active {
   background: rgba(60, 103, 255, 0.35);
   outline: 2px solid rgba(60, 103, 255, 0.8);
@@ -182,6 +186,19 @@ button:disabled {
 .hit.guide-next {
   outline: 2px solid rgba(255, 199, 80, 0.9);
   background: rgba(255, 199, 80, 0.18);
+}
+
+.knob-indicator {
+  position: absolute;
+  transform: translate(-50%, -130%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(15, 18, 26, 0.8);
+  border: 1px solid #2c3240;
+  border-radius: 10px;
+  padding: 2px 6px;
+  pointer-events: none;
 }
 
 .status {
