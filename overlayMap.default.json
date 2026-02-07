@@ -1,5 +1,5 @@
 {
-  "image": { "src": "./public/assets/omnichord.png", "w": 0, "h": 0 },
+  "image": { "src": "./omnichord.png", "w": 0, "h": 0 },
   "controls": [
     {
       "id": "strumplate",
