@@ -320,11 +320,22 @@ function parseChordKey(chordKey) {
   return { root, quality };
 }
 
+function overlayRootFromChord(root) {
+  const sharpToFlat = {
+    "C#": "Db",
+    "D#": "Eb",
+    "G#": "Ab",
+    "A#": "Bb"
+  };
+  return sharpToFlat[root] ?? root;
+}
+
 function updateGuideDisplay() {
   if (!state.guide || !songGuideEl) return;
   const step = state.guide.currentStep();
   const { root, quality } = parseChordKey(step.chord);
-  const overlayId = `chord_${root.replace("#", "s")}_${quality}`;
+  const overlayRoot = overlayRootFromChord(root);
+  const overlayId = `chord_${overlayRoot.replace("#", "s")}_${quality}`;
   setGuideTarget(state.elementsById, overlayId);
 
   songStepEl.textContent = `Next: ${step.chord} (${step.beats} beats)`;
