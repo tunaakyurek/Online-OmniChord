@@ -14,6 +14,7 @@ const stopAllBtn = document.getElementById("stop-all");
 const memoryToggle = document.getElementById("memory-toggle");
 const debugToggle = document.getElementById("debug-toggle");
 const rhythmToggleBtn = document.getElementById("rhythm-toggle");
+const guideClearBtn = document.getElementById("guide-clear");
 const audioDot = document.getElementById("audio-dot");
 const audioStatus = document.getElementById("audio-status");
 const controlStatus = document.getElementById("control-status");
@@ -80,6 +81,11 @@ function applyDebug() {
 function updateRhythmButton() {
   if (!rhythmToggleBtn) return;
   rhythmToggleBtn.textContent = rhythmEnabled ? "Rhythm On" : "Rhythm Off";
+}
+
+function updateGuideButton(enabled) {
+  if (!guideClearBtn) return;
+  guideClearBtn.disabled = !enabled;
 }
 
 function setChordActive(controlId) {
@@ -342,6 +348,21 @@ function updateGuideDisplay() {
   songProgressBar.style.width = `${state.guide.getProgress() * 100}%`;
 }
 
+function clearGuide() {
+  state.guide = null;
+  if (songGuideEl) {
+    songGuideEl.setAttribute("hidden", "hidden");
+  }
+  songTitleEl.textContent = "";
+  songStepEl.textContent = "";
+  songProgressBar.style.width = "0";
+  setGuideTarget(state.elementsById, null);
+  updateGuideButton(false);
+  const url = new URL(window.location.href);
+  url.searchParams.delete("song");
+  window.history.replaceState({}, "", url.toString());
+}
+
 function startGuideLoop() {
   if (!state.guide) return;
   const tick = () => {
@@ -358,6 +379,7 @@ async function initGuide() {
   const songId = params.get("song");
   if (!songId) {
     songGuideEl.setAttribute("hidden", "hidden");
+    updateGuideButton(false);
     return;
   }
 
@@ -366,15 +388,18 @@ async function initGuide() {
     const song = songs[songId];
     if (!song) {
       songGuideEl.setAttribute("hidden", "hidden");
+      updateGuideButton(false);
       return;
     }
     songGuideEl.removeAttribute("hidden");
+    updateGuideButton(true);
     songTitleEl.textContent = song.title;
     state.guide = createSongGuide(song, updateGuideDisplay);
     updateGuideDisplay();
     startGuideLoop();
   } catch (error) {
     songGuideEl.setAttribute("hidden", "hidden");
+    updateGuideButton(false);
   }
 }
 
@@ -429,6 +454,10 @@ enableAudioBtn.addEventListener("click", async () => {
 });
 
 stopAllBtn.addEventListener("click", stopAll);
+
+if (guideClearBtn) {
+  guideClearBtn.addEventListener("click", clearGuide);
+}
 
 if (rhythmToggleBtn) {
   updateRhythmButton();
