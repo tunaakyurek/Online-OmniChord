@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+    />
+    <title>Omnichord Songs</title>
+    <link rel="stylesheet" href="./globals.css" />
+  </head>
+  <body class="songs-page">
+    <div class="songs-shell">
+      <header>
+        <h1>Song Library</h1>
+        <p>Select a guide track to practice.</p>
+        <a class="hud-link" href="./index.html">Back to Omnichord</a>
+      </header>
+      <main>
+        <div id="songs-list" class="songs-list"></div>
+        <p id="songs-status">Loading songs...</p>
+      </main>
+    </div>
+    <script type="module" src="./src/songs/songsPage.js"></script>
+  </body>
+</html>

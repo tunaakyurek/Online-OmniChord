@@ -1,0 +1,38 @@
+{
+  "creep": {
+    "title": "Creep - Radiohead",
+    "meter": "4/4",
+    "bpm": 92,
+    "steps": [
+      { "chord": "G:maj", "beats": 4 },
+      { "chord": "B:maj", "beats": 4 },
+      { "chord": "C:maj", "beats": 4 },
+      { "chord": "C:min", "beats": 4 }
+    ],
+    "loop": true
+  },
+  "remember-you": {
+    "title": "Remember You",
+    "meter": "4/4",
+    "bpm": 96,
+    "steps": [
+      { "chord": "C:maj", "beats": 4 },
+      { "chord": "G:maj", "beats": 4 },
+      { "chord": "A:min", "beats": 4 },
+      { "chord": "F:maj", "beats": 4 }
+    ],
+    "loop": true
+  },
+  "nurse": {
+    "title": "Nurse",
+    "meter": "4/4",
+    "bpm": 88,
+    "steps": [
+      { "chord": "F:maj", "beats": 4 },
+      { "chord": "C:maj", "beats": 4 },
+      { "chord": "Bb:maj", "beats": 4 },
+      { "chord": "C:maj", "beats": 4 }
+    ],
+    "loop": true
+  }
+}

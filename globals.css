@@ -1,5 +1,12 @@
 :root {
   color-scheme: dark;
+  --bg: #0b0d12;
+  --panel: #131722;
+  --panel-2: #1a1f2b;
+  --text: #f2f4f8;
+  --muted: #9aa4b7;
+  --accent: #4fe08b;
+  --outline: rgba(0, 200, 255, 0.55);
 }
 
 * {
@@ -12,8 +19,8 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #0b0d12;
-  color: #f2f4f8;
+  background: var(--bg);
+  color: var(--text);
   font-family: "SF Pro Display", "Segoe UI", sans-serif;
 }
 
@@ -30,19 +37,27 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 20px 6px;
+  padding: 14px 20px 8px;
 }
 
-.hud h1 {
+.hud-title h1 {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
 }
 
-.hud p {
+.hud-title p {
   margin: 4px 0 0;
   font-size: 13px;
-  color: #9aa4b7;
+  color: var(--muted);
+}
+
+.hud-link {
+  display: inline-flex;
+  margin-top: 8px;
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--accent);
 }
 
 .hud-controls {
@@ -54,8 +69,8 @@ body {
 button,
 .toggle {
   border: 1px solid #2c3240;
-  background: #1a1f2b;
-  color: #f2f4f8;
+  background: var(--panel-2);
+  color: var(--text);
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 14px;
@@ -74,37 +89,99 @@ button:disabled {
   gap: 8px;
 }
 
+.song-guide {
+  margin: 0 20px 10px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid #242a38;
+  border-radius: 12px;
+}
+
+.song-guide__title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.song-guide__step {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.song-guide__bar {
+  margin-top: 8px;
+  height: 6px;
+  background: #202534;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.song-guide__bar-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.1s linear;
+}
+
 .omni-stage {
   flex: 1;
-  width: 100vw;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none;
-  overscroll-behavior: none;
+  padding: 10px 0 16px;
 }
 
-#omni-svg {
+.stage {
+  position: relative;
+  width: min(100vw, 1400px);
+  margin: 0 auto;
+  aspect-ratio: 2048 / 1111;
+}
+
+.stage__img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-.overlay-shape {
-  fill: rgba(0, 160, 255, 0.08);
-  stroke: rgba(0, 160, 255, 0.35);
-  stroke-width: 2;
-  pointer-events: all;
+.stage__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-body:not(.debug-overlay) .overlay-shape {
-  fill: transparent;
-  stroke: transparent;
+.hit {
+  pointer-events: auto;
 }
 
-.overlay-shape.active {
-  fill: rgba(60, 103, 255, 0.35);
-  stroke: rgba(60, 103, 255, 0.8);
+.debug-overlay .hit {
+  outline: 2px solid var(--outline);
+  background: rgba(0, 200, 255, 0.08);
+}
+
+.debug-overlay .hit--chord {
+  border-radius: 10px;
+}
+
+.debug-overlay .hit--strumplate {
+  border-radius: 12px;
+}
+
+.hit.active {
+  background: rgba(60, 103, 255, 0.35);
+  outline: 2px solid rgba(60, 103, 255, 0.8);
+}
+
+.hit.guide-next {
+  outline: 2px solid rgba(255, 199, 80, 0.9);
+  background: rgba(255, 199, 80, 0.18);
 }
 
 .status {
@@ -113,7 +190,7 @@ body:not(.debug-overlay) .overlay-shape {
   gap: 10px;
   padding: 8px 20px 16px;
   font-size: 12px;
-  color: #9aa4b7;
+  color: var(--muted);
 }
 
 .dot {
@@ -125,6 +202,53 @@ body:not(.debug-overlay) .overlay-shape {
 }
 
 .dot.active {
-  background: #4fe08b;
-  border-color: #4fe08b;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.songs-page {
+  background: var(--bg);
+}
+
+.songs-shell {
+  min-height: 100vh;
+  padding: 24px 20px;
+}
+
+.songs-shell h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.songs-shell p {
+  color: var(--muted);
+  margin: 6px 0 14px;
+}
+
+.songs-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.song-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: var(--panel);
+  border: 1px solid #242a38;
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.song-card__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.song-card__meta {
+  font-size: 12px;
+  color: var(--muted);
 }

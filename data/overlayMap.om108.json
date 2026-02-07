@@ -1,0 +1,303 @@
+{
+  "reference": {
+    "width": 2048,
+    "height": 1111,
+    "image": "assets/omnichord.png"
+  },
+  "elements": [
+    {
+      "id": "chord_Ds_maj",
+      "type": "chord",
+      "root": "D#",
+      "quality": "maj",
+      "bbox": [0.081055, 0.426643, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Ds_min",
+      "type": "chord",
+      "root": "D#",
+      "quality": "min",
+      "bbox": [0.09668, 0.508551, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Ds_7",
+      "type": "chord",
+      "root": "D#",
+      "quality": "7",
+      "bbox": [0.10498, 0.555356, 0.018555, 0.040504],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Ab_maj",
+      "type": "chord",
+      "root": "Ab",
+      "quality": "maj",
+      "bbox": [0.112793, 0.425743, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Ab_min",
+      "type": "chord",
+      "root": "Ab",
+      "quality": "min",
+      "bbox": [0.121094, 0.474347, 0.018555, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Ab_7",
+      "type": "chord",
+      "root": "Ab",
+      "quality": "7",
+      "bbox": [0.128418, 0.505851, 0.022949, 0.051305],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Eb_maj",
+      "type": "chord",
+      "root": "Eb",
+      "quality": "maj",
+      "bbox": [0.144531, 0.426643, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Eb_min",
+      "type": "chord",
+      "root": "Eb",
+      "quality": "min",
+      "bbox": [0.152832, 0.474347, 0.018555, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Eb_7",
+      "type": "chord",
+      "root": "Eb",
+      "quality": "7",
+      "bbox": [0.160156, 0.507651, 0.022461, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Bb_maj",
+      "type": "chord",
+      "root": "Bb",
+      "quality": "maj",
+      "bbox": [0.17627, 0.426643, 0.022949, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Bb_min",
+      "type": "chord",
+      "root": "Bb",
+      "quality": "min",
+      "bbox": [0.185059, 0.475248, 0.018066, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Bb_7",
+      "type": "chord",
+      "root": "Bb",
+      "quality": "7",
+      "bbox": [0.191895, 0.506751, 0.022949, 0.050405],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_F_maj",
+      "type": "chord",
+      "root": "F",
+      "quality": "maj",
+      "bbox": [0.208008, 0.426643, 0.022461, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_F_min",
+      "type": "chord",
+      "root": "F",
+      "quality": "min",
+      "bbox": [0.217773, 0.474347, 0.017578, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_F_7",
+      "type": "chord",
+      "root": "F",
+      "quality": "7",
+      "bbox": [0.223633, 0.509451, 0.022949, 0.047705],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_C_maj",
+      "type": "chord",
+      "root": "C",
+      "quality": "maj",
+      "bbox": [0.239746, 0.426643, 0.022461, 0.050405],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_C_min",
+      "type": "chord",
+      "root": "C",
+      "quality": "min",
+      "bbox": [0.249512, 0.474347, 0.017578, 0.040504],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_C_7",
+      "type": "chord",
+      "root": "C",
+      "quality": "7",
+      "bbox": [0.255371, 0.508551, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_G_maj",
+      "type": "chord",
+      "root": "G",
+      "quality": "maj",
+      "bbox": [0.271484, 0.426643, 0.022461, 0.050405],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_G_min",
+      "type": "chord",
+      "root": "G",
+      "quality": "min",
+      "bbox": [0.28125, 0.475248, 0.018555, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_G_7",
+      "type": "chord",
+      "root": "G",
+      "quality": "7",
+      "bbox": [0.287109, 0.509451, 0.022949, 0.047705],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_D_maj",
+      "type": "chord",
+      "root": "D",
+      "quality": "maj",
+      "bbox": [0.303223, 0.426643, 0.022461, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_D_min",
+      "type": "chord",
+      "root": "D",
+      "quality": "min",
+      "bbox": [0.3125, 0.476148, 0.017578, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_D_7",
+      "type": "chord",
+      "root": "D",
+      "quality": "7",
+      "bbox": [0.318848, 0.507651, 0.022949, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_A_maj",
+      "type": "chord",
+      "root": "A",
+      "quality": "maj",
+      "bbox": [0.334961, 0.427543, 0.022461, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_A_min",
+      "type": "chord",
+      "root": "A",
+      "quality": "min",
+      "bbox": [0.344238, 0.475248, 0.017578, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_A_7",
+      "type": "chord",
+      "root": "A",
+      "quality": "7",
+      "bbox": [0.350586, 0.507651, 0.022461, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_E_maj",
+      "type": "chord",
+      "root": "E",
+      "quality": "maj",
+      "bbox": [0.366211, 0.424842, 0.022949, 0.051305],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_E_min",
+      "type": "chord",
+      "root": "E",
+      "quality": "min",
+      "bbox": [0.375977, 0.475248, 0.017578, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_E_7",
+      "type": "chord",
+      "root": "E",
+      "quality": "7",
+      "bbox": [0.381836, 0.508551, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_B_maj",
+      "type": "chord",
+      "root": "B",
+      "quality": "maj",
+      "bbox": [0.397949, 0.424842, 0.022949, 0.052205],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_B_min",
+      "type": "chord",
+      "root": "B",
+      "quality": "min",
+      "bbox": [0.407715, 0.476148, 0.017578, 0.039604],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_B_7",
+      "type": "chord",
+      "root": "B",
+      "quality": "7",
+      "bbox": [0.414062, 0.508551, 0.022461, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Fs_maj",
+      "type": "chord",
+      "root": "F#",
+      "quality": "maj",
+      "bbox": [0.429688, 0.428443, 0.022949, 0.048605],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Fs_min",
+      "type": "chord",
+      "root": "F#",
+      "quality": "min",
+      "bbox": [0.439941, 0.475248, 0.017578, 0.040504],
+      "gesture": "hold"
+    },
+    {
+      "id": "chord_Fs_7",
+      "type": "chord",
+      "root": "F#",
+      "quality": "7",
+      "bbox": [0.445312, 0.508551, 0.022949, 0.049505],
+      "gesture": "hold"
+    },
+    {
+      "id": "strumplate_main",
+      "type": "strumplate",
+      "bbox": [0.505371, 0.106211, 0.100098, 0.585059],
+      "strings": 27
+    }
+  ]
+}

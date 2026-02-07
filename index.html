@@ -12,9 +12,10 @@
   <body>
     <div class="omni-shell">
       <header class="hud">
-        <div>
+        <div class="hud-title">
           <h1>Online Omnichord</h1>
-          <p>PNG overlay prototype (Safari-first)</p>
+          <p>OM-108 overlay (Safari-first)</p>
+          <a class="hud-link" href="./songs.html">Songs</a>
         </div>
         <div class="hud-controls">
           <button id="enable-audio">Enable Audio</button>
@@ -30,8 +31,24 @@
         </div>
       </header>
 
-      <main class="omni-stage" id="omni-stage">
-        <svg id="omni-svg" preserveAspectRatio="xMidYMid meet"></svg>
+      <section class="song-guide" id="song-guide" hidden>
+        <div class="song-guide__title" id="song-title"></div>
+        <div class="song-guide__step" id="song-step"></div>
+        <div class="song-guide__bar">
+          <div class="song-guide__bar-fill" id="song-progress-bar"></div>
+        </div>
+      </section>
+
+      <main class="omni-stage">
+        <div id="stage" class="stage">
+          <img
+            id="omniImg"
+            class="stage__img"
+            src="assets/omnichord.png"
+            alt="OM-108"
+          />
+          <div id="overlayRoot" class="stage__overlay"></div>
+        </div>
       </main>
 
       <footer class="status">
@@ -41,368 +58,6 @@
       </footer>
     </div>
 
-    <script>
-      const OVERLAY_URL = "./overlayMap.default.json";
-      const svg = document.getElementById("omni-svg");
-      const enableAudioBtn = document.getElementById("enable-audio");
-      const stopAllBtn = document.getElementById("stop-all");
-      const memoryToggle = document.getElementById("memory-toggle");
-      const debugToggle = document.getElementById("debug-toggle");
-      const audioDot = document.getElementById("audio-dot");
-      const audioStatus = document.getElementById("audio-status");
-      const controlStatus = document.getElementById("control-status");
-
-      const overlayState = {
-        map: null,
-        controlElements: new Map(),
-        controlBoxes: new Map(),
-        controlsById: new Map(),
-        pointerState: new Map()
-      };
-
-      const STRUM_RETRIGGER_MS = 30;
-
-      let audioContext = null;
-      let masterGain = null;
-      let chordGain = null;
-      let harpGain = null;
-      let activeChord = null;
-      let chordOscillators = [];
-
-      document.body.classList.toggle("debug-overlay", debugToggle.checked);
-      debugToggle.addEventListener("change", () => {
-        document.body.classList.toggle("debug-overlay", debugToggle.checked);
-      });
-
-      function setControlStatus(message) {
-        controlStatus.textContent = message;
-      }
-
-      function setAudioStatus(unlocked) {
-        audioDot.classList.toggle("active", unlocked);
-        audioStatus.textContent = unlocked
-          ? "Audio ready"
-          : "Audio locked (tap Enable Audio)";
-      }
-
-      function ensureAudio() {
-        if (audioContext) return;
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioContext.createGain();
-        masterGain.gain.value = 0.85;
-        masterGain.connect(audioContext.destination);
-
-        chordGain = audioContext.createGain();
-        chordGain.gain.value = 0.7;
-        chordGain.connect(masterGain);
-
-        harpGain = audioContext.createGain();
-        harpGain.gain.value = 0.65;
-        harpGain.connect(masterGain);
-      }
-
-      function resumeAudioFromGesture() {
-        ensureAudio();
-        if (audioContext.state !== "running") {
-          audioContext.resume().then(() => setAudioStatus(true));
-        }
-      }
-
-      function midiToFrequency(midi) {
-        return 440 * Math.pow(2, (midi - 69) / 12);
-      }
-
-      function getChordPitches(root, quality) {
-        const rootMap = {
-          C: 60,
-          "C#": 61,
-          D: 62,
-          "D#": 63,
-          E: 64,
-          F: 65,
-          "F#": 66,
-          G: 67,
-          "G#": 68,
-          A: 69,
-          "A#": 70,
-          B: 71
-        };
-        const rootMidi = rootMap[root];
-        const intervals = quality === "min" ? [0, 3, 7] : [0, 4, 7];
-        return intervals.map((interval) => midiToFrequency(rootMidi + interval));
-      }
-
-      function createOsc(frequency, type = "sine") {
-        const osc = audioContext.createOscillator();
-        osc.type = type;
-        osc.frequency.value = frequency;
-        return osc;
-      }
-
-      function stopChord() {
-        chordOscillators.forEach((osc) => {
-          try {
-            osc.stop();
-          } catch (error) {
-            // Osc already stopped
-          }
-        });
-        chordOscillators = [];
-        activeChord = null;
-        setChordActive(null);
-      }
-
-      function playChord(root, quality) {
-        if (!audioContext) return;
-        stopChord();
-        const frequencies = getChordPitches(root, quality);
-        const now = audioContext.currentTime;
-        chordOscillators = frequencies.map((freq) => {
-          const osc = createOsc(freq, "triangle");
-          const gain = audioContext.createGain();
-          gain.gain.value = 0;
-          osc.connect(gain).connect(chordGain);
-          osc.start();
-          gain.gain.linearRampToValueAtTime(0.45, now + 0.02);
-          return osc;
-        });
-        activeChord = { root, quality };
-      }
-
-      function playHarpNote(segmentIndex) {
-        if (!audioContext || !activeChord) return;
-        const chordPitches = getChordPitches(
-          activeChord.root,
-          activeChord.quality
-        );
-        const basePitch = chordPitches[segmentIndex % chordPitches.length];
-        const octaveOffset = Math.floor(segmentIndex / chordPitches.length);
-        const freq = basePitch * Math.pow(2, octaveOffset);
-        const osc = createOsc(freq, "sine");
-        const gain = audioContext.createGain();
-        const now = audioContext.currentTime;
-        gain.gain.value = 0;
-        osc.connect(gain).connect(harpGain);
-        osc.start();
-        gain.gain.linearRampToValueAtTime(0.6, now + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        osc.stop(now + 0.32);
-      }
-
-      function stopAll() {
-        stopChord();
-        overlayState.pointerState.clear();
-        overlayState.controlElements.forEach((element) => {
-          element.classList.remove("active");
-        });
-        setControlStatus("Stopped.");
-      }
-
-      function setChordActive(controlId) {
-        overlayState.controlsById.forEach((control) => {
-          if (control.type === "chord") {
-            setControlPressed(control.id, control.id === controlId);
-          }
-        });
-      }
-
-      function setControlPressed(controlId, pressed) {
-        const element = overlayState.controlElements.get(controlId);
-        if (!element) return;
-        element.classList.toggle("active", pressed);
-      }
-
-      function resolveValue(value, total, unit) {
-        if (unit === "ratio") {
-          return value * total;
-        }
-        return value;
-      }
-
-      function resolveRect(shape, dims) {
-        return {
-          x: resolveValue(shape.x, dims.w, shape.unit),
-          y: resolveValue(shape.y, dims.h, shape.unit),
-          w: resolveValue(shape.w, dims.w, shape.unit),
-          h: resolveValue(shape.h, dims.h, shape.unit),
-          rx: shape.rx ?? 0
-        };
-      }
-
-      function resolveCircle(shape, dims) {
-        return {
-          cx: resolveValue(shape.cx, dims.w, shape.unit),
-          cy: resolveValue(shape.cy, dims.h, shape.unit),
-          r: resolveValue(shape.r, Math.min(dims.w, dims.h), shape.unit)
-        };
-      }
-
-      function createShape(control, dims) {
-        const svgNS = "http://www.w3.org/2000/svg";
-        if (control.shape.kind === "circle") {
-          const circle = document.createElementNS(svgNS, "circle");
-          const resolved = resolveCircle(control.shape, dims);
-          circle.setAttribute("cx", resolved.cx);
-          circle.setAttribute("cy", resolved.cy);
-          circle.setAttribute("r", resolved.r);
-          return { element: circle, box: resolved };
-        }
-        const rect = document.createElementNS(svgNS, "rect");
-        const resolved = resolveRect(control.shape, dims);
-        rect.setAttribute("x", resolved.x);
-        rect.setAttribute("y", resolved.y);
-        rect.setAttribute("width", resolved.w);
-        rect.setAttribute("height", resolved.h);
-        if (resolved.rx) {
-          rect.setAttribute("rx", resolved.rx);
-        }
-        return { element: rect, box: resolved };
-      }
-
-      function getSvgPoint(event) {
-        const point = svg.createSVGPoint();
-        point.x = event.clientX;
-        point.y = event.clientY;
-        const matrix = svg.getScreenCTM();
-        if (!matrix) return { x: 0, y: 0 };
-        const transformed = point.matrixTransform(matrix.inverse());
-        return { x: transformed.x, y: transformed.y };
-      }
-
-      function handleControlDown(event, control) {
-        event.preventDefault();
-        resumeAudioFromGesture();
-        event.currentTarget.setPointerCapture(event.pointerId);
-        overlayState.pointerState.set(event.pointerId, {
-          controlId: control.id,
-          lastSegment: null,
-          lastTime: 0
-        });
-        if (control.type === "chord") {
-          setChordActive(control.id);
-          playChord(control.root, control.quality);
-          setControlStatus(`Chord: ${control.label ?? control.id}`);
-        } else {
-          setControlPressed(control.id, true);
-          setControlStatus(`Control: ${control.label ?? control.id}`);
-        }
-        if (control.type === "strumplate") {
-          handleStrum(event, control);
-        }
-      }
-
-      function handleControlMove(event, control) {
-        if (control.type !== "strumplate") return;
-        if (!overlayState.pointerState.has(event.pointerId)) return;
-        handleStrum(event, control);
-      }
-
-      function handleControlUp(event, control) {
-        const state = overlayState.pointerState.get(event.pointerId);
-        overlayState.pointerState.delete(event.pointerId);
-        if (state && control.type === "chord") {
-          if (!memoryToggle.checked) {
-            stopChord();
-          }
-        }
-        if (control.type === "strumplate") {
-          setControlPressed(control.id, false);
-        }
-      }
-
-      function handleStrum(event, control) {
-        const box = overlayState.controlBoxes.get(control.id);
-        if (!box) return;
-        const state = overlayState.pointerState.get(event.pointerId);
-        if (!state) return;
-        const now = performance.now();
-        if (now - state.lastTime < STRUM_RETRIGGER_MS) {
-          return;
-        }
-        const point = getSvgPoint(event);
-        const relative = Math.min(Math.max(point.y - box.y, 0), box.h);
-        const segments = control.segments ?? 12;
-        const segmentIndex = Math.floor((relative / box.h) * segments);
-        if (segmentIndex === state.lastSegment) {
-          return;
-        }
-        state.lastTime = now;
-        state.lastSegment = segmentIndex;
-        playHarpNote(segmentIndex);
-        setControlStatus(`Strum segment: ${segmentIndex + 1}`);
-      }
-
-      async function loadOverlayMap() {
-        const response = await fetch(OVERLAY_URL);
-        if (!response.ok) {
-          throw new Error("Overlay map could not be loaded.");
-        }
-        return response.json();
-      }
-
-      async function init() {
-        try {
-          const map = await loadOverlayMap();
-          overlayState.map = map;
-          const image = new Image();
-          image.src = map.image.src;
-          image.onload = () => {
-            map.image.w = image.naturalWidth;
-            map.image.h = image.naturalHeight;
-            renderOverlay(map);
-            setControlStatus("Overlay ready.");
-          };
-        } catch (error) {
-          setControlStatus("Overlay failed to load.");
-        }
-      }
-
-      function renderOverlay(map) {
-        const svgNS = "http://www.w3.org/2000/svg";
-        while (svg.firstChild) {
-          svg.removeChild(svg.firstChild);
-        }
-        svg.setAttribute("viewBox", `0 0 ${map.image.w} ${map.image.h}`);
-        const image = document.createElementNS(svgNS, "image");
-        image.setAttribute("href", map.image.src);
-        image.setAttribute("width", map.image.w);
-        image.setAttribute("height", map.image.h);
-        image.setAttribute("pointer-events", "none");
-        svg.appendChild(image);
-
-        map.controls.forEach((control) => {
-          const { element, box } = createShape(control, map.image);
-          element.classList.add("overlay-shape");
-          element.dataset.controlId = control.id;
-          element.addEventListener("pointerdown", (event) =>
-            handleControlDown(event, control)
-          );
-          element.addEventListener("pointerup", (event) =>
-            handleControlUp(event, control)
-          );
-          element.addEventListener("pointercancel", (event) =>
-            handleControlUp(event, control)
-          );
-          element.addEventListener("pointermove", (event) =>
-            handleControlMove(event, control)
-          );
-          svg.appendChild(element);
-          overlayState.controlElements.set(control.id, element);
-          overlayState.controlBoxes.set(control.id, box);
-          overlayState.controlsById.set(control.id, control);
-        });
-      }
-
-      enableAudioBtn.addEventListener("click", () => {
-        resumeAudioFromGesture();
-        enableAudioBtn.disabled = true;
-        stopAllBtn.disabled = false;
-      });
-
-      stopAllBtn.addEventListener("click", stopAll);
-
-      init();
-      setAudioStatus(false);
-    </script>
+    <script type="module" src="./src/app.js"></script>
   </body>
 </html>
