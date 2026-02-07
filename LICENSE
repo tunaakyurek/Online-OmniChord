@@ -1,0 +1,60 @@
+ONLINE-OMNICHORD LICENSE (SOURCE-AVAILABLE; USE-ONLY; COMMERCIAL USE PERMITTED)
+
+Copyright (c) 2026 Tuna Akyürek.
+All rights reserved.
+
+IMPORTANT: This is NOT an open-source license. You are allowed to USE the project as a user,
+including for commercial purposes, but you are NOT allowed to reuse the code for other projects,
+redistribute it, or host your own copy.
+
+1. DEFINITIONS
+"Software" means the source code, documentation, build scripts, and other materials contained in
+the Online-OmniChord repository.
+"Service" means any publicly accessible hosted instance of the Software operated by the copyright
+holder (e.g., the Cloudflare Pages deployment).
+"You" means an individual or entity exercising permissions granted by this license.
+
+2. GRANT OF LICENSE (USE RIGHTS)
+Subject to the terms below, you are granted a limited, non-exclusive, non-transferable,
+revocable license to:
+(a) Access and use the Service, and
+(b) Use the Service for personal, educational, and commercial purposes (including live performance,
+recording, streaming, and other commercial activity), provided you do not violate this license.
+
+3. RESTRICTIONS (NO REUSE / NO REDISTRIBUTION)
+Except as expressly permitted in Section 2, you may NOT:
+(a) Copy, reproduce, modify, translate, adapt, or create derivative works of the Software;
+(b) Distribute, publish, sublicense, sell, rent, lease, lend, or otherwise transfer the Software;
+(c) Host, deploy, or run a public or private instance of the Software (including on any platform)
+without written permission from the copyright holder;
+(d) Use the Software (in whole or in part) as part of another product, library, template, or service;
+(e) Remove or alter any copyright, trademark, or license notices in the Software.
+
+4. CONTRIBUTIONS
+Any contributions submitted to the repository (pull requests, patches, suggestions, code)
+may be incorporated into the Software at the sole discretion of the copyright holder.
+Unless you and the copyright holder agree otherwise in writing, you grant the copyright holder
+a perpetual, worldwide, royalty-free right to use, modify, and relicense your contributions.
+
+5. TRADEMARKS AND THIRD-PARTY MATERIALS
+This license does not grant any rights to any trademarks, logos, or brand names that may appear in
+the project. All trademarks belong to their respective owners.
+You are responsible for ensuring your use complies with applicable laws and third-party rights.
+
+6. DISCLAIMER OF WARRANTY
+THE SOFTWARE AND SERVICE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+AND NON-INFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
+CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF THE SERVICE.
+
+8. TERMINATION
+This license is effective until terminated. Your rights under this license terminate automatically
+if you violate any term of this license. Upon termination, you must cease any use of the Service
+that violates this license and must not use or distribute the Software.
+
+For permissions beyond this license (e.g., to host your own copy, remix, or integrate into other
+projects), contact: Tuna Akyürek (GitHub: tunaakyurek).
